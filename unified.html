@@ -565,11 +565,13 @@
     <script>
       // Get WebSocket URL (works on both localhost and Vercel)
       function getWebSocketURL() {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+
         if (
           window.location.hostname === "localhost" ||
           window.location.hostname === "127.0.0.1"
         ) {
-          return `ws://${window.location.hostname}:8001`;
+          return `${protocol}//${window.location.hostname}:8001`;
         }
         // For Vercel/remote: need to connect to your server IP
         // Replace YOUR_SERVER_IP with actual IP
@@ -580,7 +582,7 @@
             "192.168.1.100",
           );
         if (serverIp) localStorage.setItem("serverIp", serverIp);
-        return `ws://${serverIp}:8001`;
+        return `${protocol}//${serverIp}:8001`;
       }
 
       class PartyOnUnified {

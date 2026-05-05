@@ -175,14 +175,48 @@ class AudioWebSocketServer:
         """
         self.is_running = True
         
+        # Try to use SSL for WSS (Secure WebSocket)
+        ssl_context = None
+        try:
+            import ssl
+            from pathlib import Path
+            import os
+            
+            # Check multiple possible certificate locations
+            cert_locations = [
+                Path("cert.pem"),
+                Path(__file__).parent.parent / "cert.pem",
+                Path(os.getcwd()) / "cert.pem",
+            ]
+            
+            cert_path = None
+            key_path = None
+            
+            for loc in cert_locations:
+                if loc.exists() and (loc.parent / "key.pem").exists():
+                    cert_path = loc
+                    key_path = loc.parent / "key.pem"
+                    break
+            
+            if cert_path and key_path:
+                ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                ssl_context.load_cert_chain(str(cert_path), str(key_path))
+                self.logger.info(f"Using WSS (Secure WebSocket) with certificate at {cert_path}")
+            else:
+                self.logger.warning("No SSL certificate found, using WS (insecure)")
+        except Exception as e:
+            self.logger.warning(f"Failed to load SSL certificate: {e}")
+        
         self.server = await websockets.serve(
             self.handler,
             host,
             self.config.ws_port,
-            max_size=None
+            max_size=None,
+            ssl=ssl_context
         )
         
-        self.logger.info(f"WebSocket server started on ws://{host}:{self.config.ws_port}")
+        protocol = "wss" if ssl_context else "ws"
+        self.logger.info(f"WebSocket server started on {protocol}://{host}:{self.config.ws_port}")
         
         # Start broadcast loop
         self._broadcast_task = asyncio.create_task(self.broadcast_loop())
