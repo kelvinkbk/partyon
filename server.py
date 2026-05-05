@@ -102,8 +102,28 @@ class AudioStreamerServer:
             self.config,
             self.audio_capture.get_device_info()
         )
-        self.logger.info(f"HTTP server: http://{host}:{self.config.http_port}")
-        app.run(host="0.0.0.0", port=self.config.http_port, threaded=True)
+        self.logger.info(f"HTTP server: https://{host}:{self.config.http_port}")
+        
+        # Try to use HTTPS if certificates exist
+        try:
+            from pathlib import Path
+            cert_path = Path(__file__).parent.parent / "cert.pem"
+            key_path = Path(__file__).parent.parent / "key.pem"
+            
+            if cert_path.exists() and key_path.exists():
+                self.logger.info("Using HTTPS with self-signed certificate")
+                app.run(
+                    host="0.0.0.0", 
+                    port=self.config.http_port, 
+                    threaded=True,
+                    ssl_context=(str(cert_path), str(key_path))
+                )
+            else:
+                self.logger.warning("No SSL certificate found, using HTTP")
+                app.run(host="0.0.0.0", port=self.config.http_port, threaded=True)
+        except Exception as e:
+            self.logger.warning(f"Failed to enable HTTPS: {e}. Using HTTP.")
+            app.run(host="0.0.0.0", port=self.config.http_port, threaded=True)
     
     async def _run_async(self) -> None:
         """Run the async components."""
