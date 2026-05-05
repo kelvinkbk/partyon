@@ -5,8 +5,9 @@ Handles WebSocket connections and audio broadcasting.
 """
 
 import asyncio
+import json
 import logging
-from typing import Optional
+from typing import Optional, Set
 
 import websockets
 
@@ -41,6 +42,8 @@ class AudioWebSocketServer:
         self.server: Optional[websockets.WebSocketServer] = None
         self.is_running: bool = False
         self._broadcast_task: Optional[asyncio.Task] = None
+        self.broadcasters: Set[str] = set()  # Track active broadcasters
+        self.broadcaster_clients: Set[websockets.WebSocketServerProtocol] = set()  # Broadcaster WebSocket connections
     
     async def handler(self, websocket: websockets.WebSocketServerProtocol) -> None:
         """
@@ -50,10 +53,43 @@ class AudioWebSocketServer:
             websocket: The WebSocket connection.
         """
         client_id = self.connection_manager.add_client(websocket)
+        broadcaster_id = None
         
         try:
-            # Keep connection open until client disconnects explicitly
-            await websocket.wait_closed()
+            async for message in websocket:
+                # Handle both text (JSON) and binary (audio) messages
+                if isinstance(message, str):
+                    try:
+                        data = json.loads(message)
+                        cmd_type = data.get('type')
+                        
+                        if cmd_type == 'start_broadcast':
+                            broadcaster_id = client_id
+                            self.broadcasters.add(broadcaster_id)
+                            self.broadcaster_clients.add(websocket)
+                            self.logger.info(f"Broadcaster {broadcaster_id} started: {data.get('name')}")
+                            
+                            # Notify all listeners about new broadcaster
+                            await self.notify_listeners({
+                                'type': 'broadcaster_update',
+                                'id': broadcaster_id,
+                                'name': data.get('name', 'Unknown Device'),
+                                'duration': '00:00'
+                            })
+                        
+                        elif cmd_type == 'stop_broadcast':
+                            if broadcaster_id:
+                                self.broadcasters.discard(broadcaster_id)
+                                self.broadcaster_clients.discard(websocket)
+                                self.logger.info(f"Broadcaster {broadcaster_id} stopped")
+                    
+                    except json.JSONDecodeError:
+                        self.logger.warning(f"Invalid JSON from {client_id}")
+                
+                else:
+                    # Binary audio data - broadcast to all non-broadcaster clients
+                    await self.broadcast_audio(message, exclude_websocket=websocket)
+        
         except websockets.exceptions.ConnectionClosed:
             self.logger.debug(f"Client {client_id} disconnected")
         except asyncio.CancelledError:
@@ -61,7 +97,38 @@ class AudioWebSocketServer:
         except Exception as e:
             self.logger.debug(f"Client handler error for {client_id}: {e}")
         finally:
+            if broadcaster_id:
+                self.broadcasters.discard(broadcaster_id)
+                self.broadcaster_clients.discard(websocket)
             self.connection_manager.remove_client(client_id)
+    
+    async def notify_listeners(self, data: dict) -> None:
+        """Notify all non-broadcaster clients about broadcaster updates."""
+        message = json.dumps(data)
+        disconnected = set()
+        
+        for client in self.connection_manager.clients:
+            if client not in self.broadcaster_clients:
+                try:
+                    await client.send(message)
+                except websockets.exceptions.ConnectionClosed:
+                    disconnected.add(client)
+        
+        # Clean up disconnected clients
+        for client in disconnected:
+            self.connection_manager.remove_client(None)
+    
+    async def broadcast_audio(self, audio_data: bytes, exclude_websocket=None) -> None:
+        """Broadcast audio data to all non-broadcaster listening clients."""
+        disconnected = set()
+        
+        for client in self.connection_manager.clients:
+            # Send to all listeners (non-broadcasters)
+            if client not in self.broadcaster_clients and client != exclude_websocket:
+                try:
+                    await client.send(audio_data)
+                except websockets.exceptions.ConnectionClosed:
+                    disconnected.add(client)
     
     async def broadcast_loop(self) -> None:
         """Main loop for capturing and broadcasting audio."""

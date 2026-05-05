@@ -537,6 +537,18 @@
     </div>
 
     <script>
+      // Get WebSocket URL (works on both localhost and Vercel)
+      function getWebSocketURL() {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          return `ws://${window.location.hostname}:8001`;
+        }
+        // For Vercel/remote: need to connect to your server IP
+        // Replace YOUR_SERVER_IP with actual IP
+        const serverIp = localStorage.getItem('serverIp') || prompt('Enter your server IP (e.g., 192.168.1.100):', '192.168.1.100');
+        if (serverIp) localStorage.setItem('serverIp', serverIp);
+        return `ws://${serverIp}:8001`;
+      }
+
       class PartyOnUnified {
         constructor() {
           this.mode = "listen"; // listen or broadcast
@@ -546,6 +558,87 @@
           this.broadcasters = new Map();
           this.startTime = null;
           this.sampleCount = 0;
+          this.ws = null;
+          this.audioBuffer = [];
+          this.audioPlayback = null;
+          this.processorNode = null;
+          this.initWebSocket();
+        }
+
+        initWebSocket() {
+          try {
+            this.ws = new WebSocket(getWebSocketURL());
+            this.ws.binaryType = 'arraybuffer';
+
+            this.ws.onopen = () => {
+              console.log('✅ WebSocket connected');
+              this.showWebSocketStatus(true);
+            };
+
+            this.ws.onmessage = (event) => {
+              if (typeof event.data === 'string') {
+                // JSON message (broadcaster info)
+                const data = JSON.parse(event.data);
+                this.handleBroadcasterUpdate(data);
+              } else {
+                // Binary audio data
+                this.playAudio(event.data);
+              }
+            };
+
+            this.ws.onerror = (err) => {
+              console.error('❌ WebSocket error:', err);
+              this.showWebSocketStatus(false);
+            };
+
+            this.ws.onclose = () => {
+              console.log('⚠️ WebSocket disconnected');
+              this.showWebSocketStatus(false);
+              // Attempt reconnection
+              setTimeout(() => this.initWebSocket(), 3000);
+            };
+          } catch (err) {
+            console.error('Failed to create WebSocket:', err);
+          }
+        }
+
+        showWebSocketStatus(connected) {
+          const badge = document.getElementById('listenBadge');
+          if (badge) {
+            if (connected) {
+              badge.className = 'status-badge online';
+              badge.innerHTML = '<div class="status-dot online"></div><span>Connected</span>';
+            } else {
+              badge.className = 'status-badge offline';
+              badge.innerHTML = '<div class="status-dot offline"></div><span>Disconnected</span>';
+            }
+          }
+        }
+
+        handleBroadcasterUpdate(data) {
+          const { type, id, name, duration } = data;
+          if (type === 'broadcaster_update') {
+            if (!this.broadcasters.has(id)) {
+              this.broadcasters.set(id, { name, duration });
+              this.updateListenUI();
+            }
+          }
+        }
+
+        async playAudio(audioData) {
+          if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          }
+
+          try {
+            const audioBuffer = await this.audioContext.decodeAudioData(audioData);
+            const source = this.audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(this.audioContext.destination);
+            source.start(0);
+          } catch (err) {
+            console.error('Error playing audio:', err);
+          }
         }
 
         setMode(mode) {
@@ -576,16 +669,26 @@
             this.audioContext = new (
               window.AudioContext || window.webkitAudioContext
             )();
-            const source = this.audioContext.createMediaStreamSource(
-              this.mediaStream,
-            );
+            
+            const source = this.audioContext.createMediaStreamSource(this.mediaStream);
             const analyser = this.audioContext.createAnalyser();
             analyser.fftSize = 2048;
             source.connect(analyser);
+            
+            // Connect to destination to actually hear the broadcast locally
+            source.connect(this.audioContext.destination);
 
             this.isBroadcasting = true;
             this.startTime = Date.now();
             this.sampleCount = 0;
+
+            // Send broadcaster info to server
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+              this.ws.send(JSON.stringify({
+                type: 'start_broadcast',
+                name: `Device (${new Date().toLocaleTimeString()})`,
+              }));
+            }
 
             this.captureAudio(analyser);
             this.updateBroadcastUI();
@@ -604,6 +707,11 @@
 
           this.sampleCount++;
 
+          // Send audio data via WebSocket
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(dataArray.buffer);
+          }
+
           requestAnimationFrame(() => this.captureAudio(analyser));
         }
 
@@ -612,8 +720,15 @@
           if (this.mediaStream) {
             this.mediaStream.getTracks().forEach((track) => track.stop());
           }
+          
+          // Notify server
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type: 'stop_broadcast' }));
+          }
+          
           if (this.audioContext) {
             this.audioContext.close();
+            this.audioContext = null;
           }
           this.updateBroadcastUI();
         }
