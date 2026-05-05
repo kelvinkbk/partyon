@@ -107,11 +107,26 @@ class AudioStreamerServer:
         # Try to use HTTPS if certificates exist
         try:
             from pathlib import Path
-            cert_path = Path(__file__).parent.parent / "cert.pem"
-            key_path = Path(__file__).parent.parent / "key.pem"
+            import os
             
-            if cert_path.exists() and key_path.exists():
-                self.logger.info("Using HTTPS with self-signed certificate")
+            # Check multiple possible certificate locations
+            cert_locations = [
+                Path("cert.pem"),  # Current directory
+                Path(__file__).parent.parent / "cert.pem",  # Project root
+                Path(os.getcwd()) / "cert.pem",  # Working directory
+            ]
+            
+            cert_path = None
+            key_path = None
+            
+            for loc in cert_locations:
+                if loc.exists() and (loc.parent / "key.pem").exists():
+                    cert_path = loc
+                    key_path = loc.parent / "key.pem"
+                    break
+            
+            if cert_path and key_path:
+                self.logger.info(f"Using HTTPS with certificate at {cert_path}")
                 app.run(
                     host="0.0.0.0", 
                     port=self.config.http_port, 
