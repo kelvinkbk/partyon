@@ -445,15 +445,27 @@
         </div>
 
         <!-- CONNECTION INFO -->
-        <div class="status-card" id="connectionInfo" style="background: rgba(0, 150, 150, 0.1); border-left: 3px solid #00e676;">
+        <div
+          class="status-card"
+          id="connectionInfo"
+          style="
+            background: rgba(0, 150, 150, 0.1);
+            border-left: 3px solid #00e676;
+          "
+        >
           <div class="status-label">Connection Info</div>
-          <div class="status-value" id="connectionType" style="font-size: 14px; margin-top: 8px;">
-            Protocol: <span id="protocolType">HTTP</span> | 
-            Host: <span id="hostName">localhost</span>
+          <div
+            class="status-value"
+            id="connectionType"
+            style="font-size: 14px; margin-top: 8px"
+          >
+            Protocol: <span id="protocolType">HTTP</span> | Host:
+            <span id="hostName">localhost</span>
           </div>
-          <div class="status-label" style="margin-top: 8px;">
-            <span id="securityWarning" style="color: #ff5252; display: none;">
-              ⚠️ For microphone on non-localhost, use HTTPS or try localhost instead
+          <div class="status-label" style="margin-top: 8px">
+            <span id="securityWarning" style="color: #ff5252; display: none">
+              ⚠️ For microphone on non-localhost, use HTTPS or try localhost
+              instead
             </span>
           </div>
         </div>
@@ -553,13 +565,21 @@
     <script>
       // Get WebSocket URL (works on both localhost and Vercel)
       function getWebSocketURL() {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1"
+        ) {
           return `ws://${window.location.hostname}:8001`;
         }
         // For Vercel/remote: need to connect to your server IP
         // Replace YOUR_SERVER_IP with actual IP
-        const serverIp = localStorage.getItem('serverIp') || prompt('Enter your server IP (e.g., 192.168.1.100):', '192.168.1.100');
-        if (serverIp) localStorage.setItem('serverIp', serverIp);
+        const serverIp =
+          localStorage.getItem("serverIp") ||
+          prompt(
+            "Enter your server IP (e.g., 192.168.1.100):",
+            "192.168.1.100",
+          );
+        if (serverIp) localStorage.setItem("serverIp", serverIp);
         return `ws://${serverIp}:8001`;
       }
 
@@ -582,15 +602,15 @@
         initWebSocket() {
           try {
             this.ws = new WebSocket(getWebSocketURL());
-            this.ws.binaryType = 'arraybuffer';
+            this.ws.binaryType = "arraybuffer";
 
             this.ws.onopen = () => {
-              console.log('✅ WebSocket connected');
+              console.log("✅ WebSocket connected");
               this.showWebSocketStatus(true);
             };
 
             this.ws.onmessage = (event) => {
-              if (typeof event.data === 'string') {
+              if (typeof event.data === "string") {
                 // JSON message (broadcaster info)
                 const data = JSON.parse(event.data);
                 this.handleBroadcasterUpdate(data);
@@ -601,37 +621,39 @@
             };
 
             this.ws.onerror = (err) => {
-              console.error('❌ WebSocket error:', err);
+              console.error("❌ WebSocket error:", err);
               this.showWebSocketStatus(false);
             };
 
             this.ws.onclose = () => {
-              console.log('⚠️ WebSocket disconnected');
+              console.log("⚠️ WebSocket disconnected");
               this.showWebSocketStatus(false);
               // Attempt reconnection
               setTimeout(() => this.initWebSocket(), 3000);
             };
           } catch (err) {
-            console.error('Failed to create WebSocket:', err);
+            console.error("Failed to create WebSocket:", err);
           }
         }
 
         showWebSocketStatus(connected) {
-          const badge = document.getElementById('listenBadge');
+          const badge = document.getElementById("listenBadge");
           if (badge) {
             if (connected) {
-              badge.className = 'status-badge online';
-              badge.innerHTML = '<div class="status-dot online"></div><span>Connected</span>';
+              badge.className = "status-badge online";
+              badge.innerHTML =
+                '<div class="status-dot online"></div><span>Connected</span>';
             } else {
-              badge.className = 'status-badge offline';
-              badge.innerHTML = '<div class="status-dot offline"></div><span>Disconnected</span>';
+              badge.className = "status-badge offline";
+              badge.innerHTML =
+                '<div class="status-dot offline"></div><span>Disconnected</span>';
             }
           }
         }
 
         handleBroadcasterUpdate(data) {
           const { type, id, name, duration } = data;
-          if (type === 'broadcaster_update') {
+          if (type === "broadcaster_update") {
             if (!this.broadcasters.has(id)) {
               this.broadcasters.set(id, { name, duration });
               this.updateListenUI();
@@ -641,17 +663,20 @@
 
         async playAudio(audioData) {
           if (!this.audioContext) {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.audioContext = new (
+              window.AudioContext || window.webkitAudioContext
+            )();
           }
 
           try {
-            const audioBuffer = await this.audioContext.decodeAudioData(audioData);
+            const audioBuffer =
+              await this.audioContext.decodeAudioData(audioData);
             const source = this.audioContext.createBufferSource();
             source.buffer = audioBuffer;
             source.connect(this.audioContext.destination);
             source.start(0);
           } catch (err) {
-            console.error('Error playing audio:', err);
+            console.error("Error playing audio:", err);
           }
         }
 
@@ -673,10 +698,13 @@
         async startBroadcast() {
           try {
             // Check if getUserMedia is available
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (
+              !navigator.mediaDevices ||
+              !navigator.mediaDevices.getUserMedia
+            ) {
               throw new Error(
                 "Microphone not supported. " +
-                "Please use HTTPS or localhost, and allow microphone permissions."
+                  "Please use HTTPS or localhost, and allow microphone permissions.",
               );
             }
 
@@ -691,12 +719,14 @@
             this.audioContext = new (
               window.AudioContext || window.webkitAudioContext
             )();
-            
-            const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+
+            const source = this.audioContext.createMediaStreamSource(
+              this.mediaStream,
+            );
             const analyser = this.audioContext.createAnalyser();
             analyser.fftSize = 2048;
             source.connect(analyser);
-            
+
             // Connect to destination to actually hear the broadcast locally
             source.connect(this.audioContext.destination);
 
@@ -706,10 +736,12 @@
 
             // Send broadcaster info to server
             if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-              this.ws.send(JSON.stringify({
-                type: 'start_broadcast',
-                name: `Device (${new Date().toLocaleTimeString()})`,
-              }));
+              this.ws.send(
+                JSON.stringify({
+                  type: "start_broadcast",
+                  name: `Device (${new Date().toLocaleTimeString()})`,
+                }),
+              );
             }
 
             this.captureAudio(analyser);
@@ -718,11 +750,15 @@
             return true;
           } catch (err) {
             const msg = err.message || String(err);
-            if (msg.includes('Permission denied')) {
-              throw new Error('Microphone permission denied. Please allow access.');
+            if (msg.includes("Permission denied")) {
+              throw new Error(
+                "Microphone permission denied. Please allow access.",
+              );
             }
-            if (msg.includes('getUserMedia')) {
-              throw new Error('HTTPS required for microphone access (or use localhost)');
+            if (msg.includes("getUserMedia")) {
+              throw new Error(
+                "HTTPS required for microphone access (or use localhost)",
+              );
             }
             throw err;
           }
@@ -749,12 +785,12 @@
           if (this.mediaStream) {
             this.mediaStream.getTracks().forEach((track) => track.stop());
           }
-          
+
           // Notify server
           if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({ type: 'stop_broadcast' }));
+            this.ws.send(JSON.stringify({ type: "stop_broadcast" }));
           }
-          
+
           if (this.audioContext) {
             this.audioContext.close();
             this.audioContext = null;
@@ -840,15 +876,19 @@
       const app = new PartyOnUnified();
 
       // Show connection info
-      document.getElementById('protocolType').textContent = window.location.protocol.replace(':', '');
-      document.getElementById('hostName').textContent = window.location.hostname;
-      
+      document.getElementById("protocolType").textContent =
+        window.location.protocol.replace(":", "");
+      document.getElementById("hostName").textContent =
+        window.location.hostname;
+
       // Warn if not localhost and not HTTPS
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const isSecure = window.location.protocol === 'https:';
-      
+      const isLocalhost =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+      const isSecure = window.location.protocol === "https:";
+
       if (!isLocalhost && !isSecure) {
-        document.getElementById('securityWarning').style.display = 'block';
+        document.getElementById("securityWarning").style.display = "block";
       }
 
       // Mode buttons
