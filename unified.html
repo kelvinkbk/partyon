@@ -664,21 +664,16 @@
         }
 
         async playAudio(audioData) {
-          if (!this.audioContext) {
-            this.audioContext = new (
-              window.AudioContext || window.webkitAudioContext
-            )();
-          }
-
-          try {
-            const audioBuffer =
-              await this.audioContext.decodeAudioData(audioData);
-            const source = this.audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(this.audioContext.destination);
-            source.start(0);
-          } catch (err) {
-            console.error("Error playing audio:", err);
+          // Track audio packets received (for now, just count them)
+          // Full playback requires proper PCM audio format implementation
+          this.audioPacketCount = (this.audioPacketCount || 0) + 1;
+          
+          // Update stats to show audio is streaming
+          if (this.audioPacketCount % 10 === 0) {
+            const packetDisplay = document.getElementById("packetCount");
+            if (packetDisplay) {
+              packetDisplay.textContent = this.audioPacketCount;
+            }
           }
         }
 
