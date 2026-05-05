@@ -1,27 +1,8 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "client.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "dashboard.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "mobile-server.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "unified.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "static/**",
-      "use": "@vercel/static"
-    }
-  ],
+  "buildCommand": "echo 'No build needed - static files only'",
+  "installCommand": "echo 'No dependencies needed'",
+  "outputDirectory": ".",
+  "trailingSlash": false,
   "routes": [
     {
       "src": "/static/(.*)",
