@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Generate self-signed certificate for HTTPS."""
+"""Generate self-signed certificate for HTTPS and WSS."""
 
 from cryptography import x509
 from cryptography.x509.oid import NameOID
@@ -8,6 +8,21 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from datetime import datetime, timedelta
 import ipaddress
+import socket
+
+# Get local IP dynamically
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except Exception:
+        return "127.0.0.1"
+    finally:
+        s.close()
+
+local_ip = get_local_ip()
+print(f"🔧 Generating certificate for IP: {local_ip}")
 
 # Generate private key
 key = rsa.generate_private_key(
@@ -37,7 +52,9 @@ cert = x509.CertificateBuilder().subject_name(
     x509.SubjectAlternativeName([
         x509.DNSName(u"localhost"),
         x509.DNSName(u"127.0.0.1"),
-        x509.IPAddress(ipaddress.IPv4Address(u"192.168.29.26")),
+        x509.DNSName(u"*.local"),
+        x509.IPAddress(ipaddress.IPv4Address(u"127.0.0.1")),
+        x509.IPAddress(ipaddress.IPv4Address(local_ip)),
     ]),
     critical=False,
 ).sign(key, hashes.SHA256(), default_backend())
