@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="theme-color" content="#0f1724" />
+    <title>PartyOn - Server Dashboard</title>
+
+    <style>
+      :root {
+        --accent1: #00e676;
+        --accent2: #00c853;
+        --glass: rgba(255, 255, 255, 0.06);
+        --glass-2: rgba(255, 255, 255, 0.04);
+        --text: #eef6f9;
+        --danger: #ff5252;
+        --warning: #ffc107;
+        --success: #00e676;
+        --spacing-xs: 8px;
+        --spacing-sm: 12px;
+        --spacing-md: 16px;
+        --spacing-lg: 24px;
+        --radius: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Poppins", Arial,
+          sans-serif;
+        background:
+          radial-gradient(
+            1000px 600px at 10% 20%,
+            rgba(0, 0, 0, 0.18),
+            transparent
+          ),
+          linear-gradient(135deg, #0f1724 0%, #1f1c2c 35%, #5b4666 100%);
+        background-attachment: fixed;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      .blob {
+        position: fixed;
+        filter: blur(60px);
+        opacity: 0.45;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .blob.b1 {
+        width: 520px;
+        height: 520px;
+        background: linear-gradient(45deg, #8c6cff, #00e5ff);
+        left: -10%;
+        top: -15%;
+      }
+
+      .blob.b2 {
+        width: 420px;
+        height: 420px;
+        background: linear-gradient(45deg, #00e676, #00c853);
+        right: -8%;
+        bottom: -20%;
+      }
+
+      header {
+        background: rgba(15, 23, 36, 0.8);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        padding: var(--spacing-md) var(--spacing-lg);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(20px, 5vw, 28px);
+        font-weight: 700;
+        letter-spacing: -0.4px;
+      }
+
+      .nav {
+        display: flex;
+        gap: var(--spacing-md);
+        align-items: center;
+      }
+
+      .nav a {
+        color: var(--text);
+        text-decoration: none;
+        font-size: clamp(12px, 3vw, 14px);
+        padding: 8px 12px;
+        border-radius: var(--radius);
+        transition: background 0.2s ease;
+      }
+
+      .nav a:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .nav a.active {
+        background: rgba(0, 230, 118, 0.2);
+        color: var(--accent1);
+      }
+
+      .container {
+        flex: 1;
+        padding: var(--spacing-lg) var(--spacing-md);
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .card {
+        backdrop-filter: blur(12px) saturate(120%);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.03),
+          rgba(255, 255, 255, 0.02)
+        );
+        border-radius: var(--radius);
+        box-shadow:
+          0 30px 80px rgba(3, 6, 23, 0.65),
+          inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: var(--spacing-lg);
+        animation: fadeIn 0.6s ease;
+      }
+
+      .card h2 {
+        margin: 0 0 var(--spacing-sm) 0;
+        font-size: clamp(16px, 4vw, 18px);
+        font-weight: 600;
+        color: var(--accent1);
+      }
+
+      .stat-value {
+        font-size: clamp(28px, 6vw, 36px);
+        font-weight: 700;
+        margin: var(--spacing-sm) 0;
+        word-break: break-word;
+      }
+
+      .stat-label {
+        font-size: clamp(12px, 3vw, 13px);
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: clamp(11px, 2.5vw, 12px);
+        font-weight: 600;
+        margin-top: var(--spacing-sm);
+      }
+
+      .status-badge.online {
+        background: rgba(0, 230, 118, 0.2);
+        color: var(--success);
+      }
+
+      .status-badge.offline {
+        background: rgba(255, 82, 82, 0.2);
+        color: var(--danger);
+      }
+
+      .status-badge.warning {
+        background: rgba(255, 193, 7, 0.2);
+        color: var(--warning);
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .status-dot.online {
+        background: var(--success);
+        animation: pulse 2s infinite;
+      }
+
+      .status-dot.offline {
+        background: var(--danger);
+      }
+
+      .status-dot.warning {
+        background: var(--warning);
+        animation: pulse 1s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .list-container {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .list-item {
+        padding: var(--spacing-sm);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--spacing-sm);
+        word-break: break-word;
+      }
+
+      .list-item:last-child {
+        border-bottom: none;
+      }
+
+      .list-item-label {
+        font-size: clamp(11px, 2.5vw, 12px);
+        color: rgba(255, 255, 255, 0.7);
+        flex: 1;
+      }
+
+      .list-item-value {
+        font-size: clamp(11px, 2.5vw, 12px);
+        font-weight: 600;
+        color: var(--accent1);
+        white-space: nowrap;
+      }
+
+      .btn {
+        padding: clamp(10px, 3vw, 12px) clamp(14px, 4vw, 18px);
+        font-size: clamp(12px, 3vw, 13px);
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background: linear-gradient(90deg, var(--accent1), var(--accent2));
+        color: #021009;
+        box-shadow: 0 8px 28px rgba(2, 200, 118, 0.12);
+      }
+
+      .btn-primary:hover {
+        box-shadow: 0 14px 40px rgba(2, 200, 118, 0.14);
+      }
+
+      .btn-secondary {
+        background: var(--glass);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-group {
+        display: flex;
+        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+        margin-top: var(--spacing-md);
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: var(--spacing-sm);
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent1), var(--accent2));
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .scroll-hint {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.4);
+        text-align: center;
+        padding: var(--spacing-sm);
+        display: none;
+      }
+
+      .list-container::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .list-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+      }
+
+      .list-container::-webkit-scrollbar-thumb {
+        background: rgba(0, 230, 118, 0.3);
+        border-radius: 3px;
+      }
+
+      .list-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 230, 118, 0.5);
+      }
+
+      footer {
+        text-align: center;
+        padding: var(--spacing-lg) var(--spacing-md);
+        font-size: clamp(11px, 2.5vw, 12px);
+        color: rgba(255, 255, 255, 0.5);
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        position: relative;
+        z-index: 2;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .header-content {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .container {
+          padding: var(--spacing-md);
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .blob.b1 {
+          width: 300px;
+          height: 300px;
+        }
+
+        .blob.b2 {
+          width: 250px;
+          height: 250px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        header {
+          padding: var(--spacing-md);
+        }
+
+        .container {
+          padding: var(--spacing-md) var(--spacing-sm);
+        }
+
+        .card {
+          padding: var(--spacing-md);
+        }
+
+        .btn-group {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .blob.b1 {
+          width: 200px;
+          height: 200px;
+          left: -50px;
+          top: -50px;
+        }
+
+        .blob.b2 {
+          width: 180px;
+          height: 180px;
+          right: -60px;
+          bottom: -60px;
+        }
+      }
+
+      @media (max-height: 700px) and (orientation: landscape) {
+        header {
+          padding: var(--spacing-sm) var(--spacing-md);
+        }
+
+        .container {
+          padding: var(--spacing-sm);
+        }
+
+        .card {
+          padding: var(--spacing-md);
+        }
+
+        .grid {
+          gap: var(--spacing-md);
+        }
+      }
+
+      .loading {
+        text-align: center;
+        padding: var(--spacing-lg);
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .error {
+        background: rgba(255, 82, 82, 0.1);
+        border: 1px solid rgba(255, 82, 82, 0.3);
+        color: var(--danger);
+        padding: var(--spacing-md);
+        border-radius: var(--radius);
+        margin-bottom: var(--spacing-md);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="blob b1" aria-hidden="true"></div>
+    <div class="blob b2" aria-hidden="true"></div>
+
+    <header>
+      <div class="header-content">
+        <h1>PartyOn Dashboard</h1>
+        <nav class="nav">
+          <a href="/">Player</a>
+          <a href="/dashboard" class="active">Dashboard</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="grid">
+        <!-- Server Status -->
+        <div class="card">
+          <h2>Server Status</h2>
+          <div class="stat-label">Current State</div>
+          <div id="serverStatus" class="stat-value">●</div>
+          <div id="statusBadge" class="status-badge online">
+            <div class="status-dot online"></div>
+            <span>Online</span>
+          </div>
+        </div>
+
+        <!-- Connected Clients -->
+        <div class="card">
+          <h2>Connected Clients</h2>
+          <div class="stat-value" id="clientCount">0</div>
+          <div class="stat-label">Active players</div>
+        </div>
+
+        <!-- Audio Stats -->
+        <div class="card">
+          <h2>Audio Output</h2>
+          <div class="stat-label">Sample Rate</div>
+          <div class="stat-value" id="sampleRate">--</div>
+          <div class="stat-label" style="margin-top: 8px">Channels</div>
+          <div class="stat-value" id="channels">--</div>
+        </div>
+
+        <!-- Uptime -->
+        <div class="card">
+          <h2>Uptime</h2>
+          <div class="stat-value" id="uptime">00:00:00</div>
+          <div class="stat-label">Server running time</div>
+        </div>
+      </div>
+
+      <!-- Detailed Stats Card -->
+      <div class="card">
+        <h2>Server Information</h2>
+        <div id="serverInfo" class="list-container">
+          <div class="loading">Loading server information...</div>
+        </div>
+      </div>
+
+      <!-- Clients List Card -->
+      <div class="card" style="margin-top: var(--spacing-lg)">
+        <h2>Connected Players</h2>
+        <div id="clientsList" class="list-container">
+          <div class="loading">Loading connected players...</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card" style="margin-top: var(--spacing-lg)">
+        <h2>Server Controls</h2>
+        <div class="btn-group">
+          <button id="refreshBtn" class="btn btn-primary">Refresh Stats</button>
+          <button id="restartAudioBtn" class="btn btn-secondary">
+            Restart Audio
+          </button>
+          <button id="backupConfigBtn" class="btn btn-secondary">
+            Export Config
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>PartyOn Dashboard • Real-time audio streaming for your LAN</p>
+    </footer>
+
+    <script>
+      const REFRESH_INTERVAL = 3000; // Refresh every 3 seconds
+      let lastUpdate = 0;
+
+      async function fetchStatus() {
+        try {
+          const response = await fetch("/api/status");
+          if (!response.ok) throw new Error("Failed to fetch status");
+          return await response.json();
+        } catch (error) {
+          console.error("Error fetching status:", error);
+          return null;
+        }
+      }
+
+      function updateUI(data) {
+        if (!data) {
+          document.getElementById("serverStatus").textContent = "●";
+          document.getElementById("statusBadge").className =
+            "status-badge offline";
+          document.getElementById("statusBadge").innerHTML =
+            '<div class="status-dot offline"></div><span>Offline</span>';
+          return;
+        }
+
+        // Update status
+        document.getElementById("serverStatus").textContent =
+          data.status === "running" ? "●" : "◯";
+        const statusBadge = document.getElementById("statusBadge");
+        const isOnline = data.status === "running";
+        statusBadge.className = `status-badge ${isOnline ? "online" : "offline"}`;
+        statusBadge.innerHTML = `<div class="status-dot ${isOnline ? "online" : "offline"}"></div><span>${isOnline ? "Online" : "Offline"}</span>`;
+
+        // Update client count
+        document.getElementById("clientCount").textContent =
+          data.client_count || 0;
+
+        // Update audio info
+        document.getElementById("sampleRate").textContent =
+          `${data.sample_rate || "--"} Hz`;
+        document.getElementById("channels").textContent = data.channels || "--";
+
+        // Update uptime
+        if (data.uptime) {
+          const hours = Math.floor(data.uptime / 3600);
+          const minutes = Math.floor((data.uptime % 3600) / 60);
+          const seconds = data.uptime % 60;
+          document.getElementById("uptime").textContent =
+            `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        }
+
+        // Update server info
+        const serverInfoDiv = document.getElementById("serverInfo");
+        if (data.server_info) {
+          serverInfoDiv.innerHTML = Object.entries(data.server_info)
+            .map(
+              ([key, value]) => `
+                        <div class="list-item">
+                            <div class="list-item-label">${key}</div>
+                            <div class="list-item-value">${String(value).substring(0, 30)}</div>
+                        </div>
+                    `,
+            )
+            .join("");
+        }
+
+        // Update clients list
+        const clientsListDiv = document.getElementById("clientsList");
+        if (data.clients && data.clients.length > 0) {
+          clientsListDiv.innerHTML = data.clients
+            .map(
+              (client, idx) => `
+                        <div class="list-item">
+                            <div class="list-item-label">Player ${idx + 1}</div>
+                            <div class="list-item-value">${client.substring(0, 25)}</div>
+                        </div>
+                    `,
+            )
+            .join("");
+        } else {
+          clientsListDiv.innerHTML =
+            '<div class="loading">No players connected</div>';
+        }
+      }
+
+      function startAutoRefresh() {
+        updateStatus();
+        setInterval(() => {
+          if (Date.now() - lastUpdate > REFRESH_INTERVAL - 500) {
+            updateStatus();
+          }
+        }, REFRESH_INTERVAL);
+      }
+
+      async function updateStatus() {
+        lastUpdate = Date.now();
+        const data = await fetchStatus();
+        updateUI(data);
+      }
+
+      // Event listeners
+      document
+        .getElementById("refreshBtn")
+        .addEventListener("click", updateStatus);
+
+      document
+        .getElementById("restartAudioBtn")
+        .addEventListener("click", async () => {
+          const btn = document.getElementById("restartAudioBtn");
+          btn.disabled = true;
+          try {
+            const response = await fetch("/api/restart-audio", {
+              method: "POST",
+            });
+            if (response.ok) {
+              alert("Audio restarted successfully");
+              updateStatus();
+            } else {
+              alert("Failed to restart audio");
+            }
+          } catch (error) {
+            alert("Error: " + error.message);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+
+      document
+        .getElementById("backupConfigBtn")
+        .addEventListener("click", async () => {
+          try {
+            const response = await fetch("/api/config");
+            if (response.ok) {
+              const config = await response.json();
+              const element = document.createElement("a");
+              element.setAttribute(
+                "href",
+                "data:text/plain;charset=utf-8," +
+                  encodeURIComponent(JSON.stringify(config, null, 2)),
+              );
+              element.setAttribute("download", "partyOn-config-backup.json");
+              element.style.display = "none";
+              document.body.appendChild(element);
+              element.click();
+              document.body.removeChild(element);
+            } else {
+              alert("Failed to export config");
+            }
+          } catch (error) {
+            alert("Error: " + error.message);
+          }
+        });
+
+      // Start updates
+      window.addEventListener("load", startAutoRefresh);
+      window.addEventListener("focus", updateStatus);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="theme-color" content="#0f1724" />
+    <title>PartyOn - Unified</title>
+
+    <style>
+      :root {
+        --accent1: #00e676;
+        --accent2: #00c853;
+        --glass: rgba(255, 255, 255, 0.06);
+        --text: #eef6f9;
+        --danger: #ff5252;
+        --warning: #ffc107;
+        --success: #00e676;
+        --spacing-md: 16px;
+        --spacing-lg: 24px;
+        --radius: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Poppins", Arial,
+          sans-serif;
+        background:
+          radial-gradient(
+            1000px 600px at 10% 20%,
+            rgba(0, 0, 0, 0.18),
+            transparent
+          ),
+          linear-gradient(135deg, #0f1724 0%, #1f1c2c 35%, #5b4666 100%);
+        background-attachment: fixed;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        padding: var(--spacing-md);
+      }
+
+      .blob {
+        position: fixed;
+        filter: blur(60px);
+        opacity: 0.45;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .blob.b1 {
+        width: 300px;
+        height: 300px;
+        background: linear-gradient(45deg, #8c6cff, #00e5ff);
+        left: -10%;
+        top: -15%;
+      }
+
+      .blob.b2 {
+        width: 250px;
+        height: 250px;
+        background: linear-gradient(45deg, #00e676, #00c853);
+        right: -8%;
+        bottom: -20%;
+      }
+
+      .container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 540px;
+        backdrop-filter: blur(12px) saturate(120%);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.03),
+          rgba(255, 255, 255, 0.02)
+        );
+        border-radius: var(--radius);
+        box-shadow:
+          0 30px 80px rgba(3, 6, 23, 0.65),
+          inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: var(--spacing-lg);
+      }
+
+      h1 {
+        font-size: clamp(24px, 8vw, 28px);
+        margin: 0 0 8px 0;
+        font-weight: 700;
+      }
+
+      .sub {
+        font-size: clamp(12px, 3vw, 14px);
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .mode-selector {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .mode-btn {
+        padding: var(--spacing-md);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .mode-btn:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .mode-btn.active {
+        background: linear-gradient(
+          135deg,
+          rgba(0, 230, 118, 0.2),
+          rgba(0, 200, 83, 0.2)
+        );
+        border-color: var(--accent1);
+        color: var(--accent1);
+      }
+
+      .btn {
+        padding: clamp(12px, 4vw, 16px) clamp(16px, 5vw, 20px);
+        font-size: clamp(14px, 4vw, 16px);
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        margin-bottom: var(--spacing-md);
+      }
+
+      .btn-primary {
+        background: linear-gradient(90deg, var(--accent1), var(--accent2));
+        color: #021009;
+        box-shadow: 0 8px 28px rgba(2, 200, 118, 0.12);
+      }
+
+      .btn-primary:hover {
+        box-shadow: 0 14px 40px rgba(2, 200, 118, 0.14);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-stop {
+        background: rgba(255, 82, 82, 0.2);
+        color: var(--danger);
+        border: 1px solid rgba(255, 82, 82, 0.3);
+      }
+
+      .btn-stop:hover {
+        background: rgba(255, 82, 82, 0.3);
+      }
+
+      .section {
+        margin: var(--spacing-lg) 0;
+        display: none;
+      }
+
+      .section.active {
+        display: block;
+      }
+
+      .status-card {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: var(--radius);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+      }
+
+      .status-label {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 4px;
+      }
+
+      .status-value {
+        font-size: clamp(14px, 4vw, 16px);
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 8px;
+      }
+
+      .status-badge.online {
+        background: rgba(0, 230, 118, 0.2);
+        color: var(--success);
+      }
+
+      .status-badge.offline {
+        background: rgba(255, 82, 82, 0.2);
+        color: var(--danger);
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .status-dot.online {
+        background: var(--success);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .device-list {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: var(--radius);
+        max-height: 250px;
+        overflow-y: auto;
+      }
+
+      .device-item {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-md);
+      }
+
+      .device-item:last-child {
+        border-bottom: none;
+      }
+
+      .device-name {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .device-status {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .device-badge {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+        animation: pulse 2s infinite;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+        margin: var(--spacing-md) 0;
+      }
+
+      .control-btn {
+        padding: var(--spacing-md);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .control-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--accent1);
+        color: var(--accent1);
+      }
+
+      .error-msg {
+        background: rgba(255, 82, 82, 0.1);
+        border: 1px solid rgba(255, 82, 82, 0.3);
+        color: var(--danger);
+        padding: var(--spacing-md);
+        border-radius: var(--radius);
+        margin: var(--spacing-md) 0;
+        font-size: 12px;
+        word-break: break-word;
+      }
+
+      .success-msg {
+        background: rgba(0, 230, 118, 0.1);
+        border: 1px solid rgba(0, 230, 118, 0.3);
+        color: var(--success);
+        padding: var(--spacing-md);
+        border-radius: var(--radius);
+        margin: var(--spacing-md) 0;
+        font-size: 12px;
+      }
+
+      .stats {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: var(--radius);
+        padding: var(--spacing-md);
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 12px;
+      }
+
+      .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .stat-value {
+        color: var(--accent1);
+        font-weight: 600;
+      }
+
+      .volume-control {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin: var(--spacing-md) 0;
+      }
+
+      .volume-control label {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
+      }
+
+      .volume-control input[type="range"] {
+        flex: 1;
+        height: 6px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .volume-control input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent1);
+        border-radius: 50%;
+        cursor: pointer;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 12px;
+        }
+
+        .card {
+          padding: var(--spacing-md);
+        }
+
+        .mode-selector {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="blob b1" aria-hidden="true"></div>
+    <div class="blob b2" aria-hidden="true"></div>
+
+    <div class="container">
+      <div class="card">
+        <h1>🎵 PartyOn</h1>
+        <div class="sub">Every device is a speaker & microphone</div>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+          <button class="mode-btn active" data-mode="listen">🔊 Listen</button>
+          <button class="mode-btn" data-mode="broadcast">🎤 Broadcast</button>
+        </div>
+
+        <!-- LISTEN MODE -->
+        <div id="listenSection" class="section active">
+          <div class="status-card">
+            <div class="status-label">Listening Status</div>
+            <div class="status-value">Ready to hear streams</div>
+            <div id="listenBadge" class="status-badge online">
+              <div class="status-dot online"></div>
+              <span>Connected</span>
+            </div>
+          </div>
+
+          <div class="volume-control">
+            <label for="volumeSlider">Volume:</label>
+            <input
+              type="range"
+              id="volumeSlider"
+              min="0"
+              max="100"
+              value="100"
+            />
+          </div>
+
+          <div class="status-label">📱 Active Broadcasters</div>
+          <div id="broadcasterList" class="device-list">
+            <div class="device-item">
+              <div>
+                <div class="device-name">No broadcasters</div>
+                <div class="device-status">Waiting for streams...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats" style="margin-top: var(--spacing-lg)">
+            <div class="stat-item">
+              <div class="stat-label">Active Streams</div>
+              <div class="stat-value" id="streamCount">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Total Packets</div>
+              <div class="stat-value" id="packetCount">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BROADCAST MODE -->
+        <div id="broadcastSection" class="section">
+          <div class="status-card">
+            <div class="status-label">Broadcast Status</div>
+            <div id="broadcastStatus" class="status-value">Ready</div>
+            <div id="broadcastBadge" class="status-badge offline">
+              <div class="status-dot offline"></div>
+              <span>Offline</span>
+            </div>
+          </div>
+
+          <button id="startBroadcastBtn" class="btn btn-primary">
+            <span>🎤 Start Broadcasting</span>
+          </button>
+
+          <button
+            id="stopBroadcastBtn"
+            class="btn btn-stop"
+            style="display: none"
+          >
+            <span>⏹️ Stop Broadcasting</span>
+          </button>
+
+          <div class="controls" id="broadcastControls" style="display: none">
+            <button class="control-btn">🔊 Mute</button>
+            <button class="control-btn">📊 Stats</button>
+          </div>
+
+          <div class="stats" style="display: none" id="broadcastStats">
+            <div class="stat-item">
+              <div class="stat-label">Samples Captured</div>
+              <div class="stat-value" id="capturedSamples">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Duration</div>
+              <div class="stat-value" id="broadcastDuration">00:00</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Listeners</div>
+              <div class="stat-value" id="listenerCount">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="messageContainer" style="margin-top: var(--spacing-lg)"></div>
+      </div>
+    </div>
+
+    <script>
+      class PartyOnUnified {
+        constructor() {
+          this.mode = "listen"; // listen or broadcast
+          this.audioContext = null;
+          this.mediaStream = null;
+          this.isBroadcasting = false;
+          this.broadcasters = new Map();
+          this.startTime = null;
+          this.sampleCount = 0;
+        }
+
+        setMode(mode) {
+          this.mode = mode;
+          const listenSection = document.getElementById("listenSection");
+          const broadcastSection = document.getElementById("broadcastSection");
+
+          if (mode === "listen") {
+            listenSection.classList.add("active");
+            broadcastSection.classList.remove("active");
+            this.stopBroadcast();
+          } else {
+            listenSection.classList.remove("active");
+            broadcastSection.classList.add("active");
+          }
+        }
+
+        async startBroadcast() {
+          try {
+            this.mediaStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false,
+              },
+            });
+
+            this.audioContext = new (
+              window.AudioContext || window.webkitAudioContext
+            )();
+            const source = this.audioContext.createMediaStreamSource(
+              this.mediaStream,
+            );
+            const analyser = this.audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            source.connect(analyser);
+
+            this.isBroadcasting = true;
+            this.startTime = Date.now();
+            this.sampleCount = 0;
+
+            this.captureAudio(analyser);
+            this.updateBroadcastUI();
+
+            return true;
+          } catch (err) {
+            throw new Error("Microphone access denied: " + err.message);
+          }
+        }
+
+        captureAudio(analyser) {
+          if (!this.isBroadcasting) return;
+
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          analyser.getByteFrequencyData(dataArray);
+
+          this.sampleCount++;
+
+          requestAnimationFrame(() => this.captureAudio(analyser));
+        }
+
+        stopBroadcast() {
+          this.isBroadcasting = false;
+          if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach((track) => track.stop());
+          }
+          if (this.audioContext) {
+            this.audioContext.close();
+          }
+          this.updateBroadcastUI();
+        }
+
+        updateBroadcastUI() {
+          const startBtn = document.getElementById("startBroadcastBtn");
+          const stopBtn = document.getElementById("stopBroadcastBtn");
+          const controls = document.getElementById("broadcastControls");
+          const stats = document.getElementById("broadcastStats");
+          const status = document.getElementById("broadcastStatus");
+          const badge = document.getElementById("broadcastBadge");
+
+          if (this.isBroadcasting) {
+            startBtn.style.display = "none";
+            stopBtn.style.display = "flex";
+            controls.style.display = "grid";
+            stats.style.display = "block";
+            status.textContent = "Broadcasting";
+            badge.className = "status-badge online";
+            badge.innerHTML =
+              '<div class="status-dot online"></div><span>Live</span>';
+
+            // Update stats every 500ms
+            this.broadcastUpdateInterval = setInterval(() => {
+              const duration = Math.floor((Date.now() - this.startTime) / 1000);
+              document.getElementById("capturedSamples").textContent =
+                this.sampleCount.toLocaleString();
+              document.getElementById("broadcastDuration").textContent =
+                `${String(Math.floor(duration / 60)).padStart(2, "0")}:${String(duration % 60).padStart(2, "0")}`;
+            }, 500);
+          } else {
+            startBtn.style.display = "flex";
+            stopBtn.style.display = "none";
+            controls.style.display = "none";
+            stats.style.display = "none";
+            status.textContent = "Ready";
+            badge.className = "status-badge offline";
+            badge.innerHTML =
+              '<div class="status-dot offline"></div><span>Offline</span>';
+            if (this.broadcastUpdateInterval) {
+              clearInterval(this.broadcastUpdateInterval);
+            }
+          }
+        }
+
+        updateListenUI() {
+          const broadcasterList = document.getElementById("broadcasterList");
+
+          if (this.broadcasters.size === 0) {
+            broadcasterList.innerHTML = `
+                        <div class="device-item">
+                            <div>
+                                <div class="device-name">Waiting...</div>
+                                <div class="device-status">No active broadcasters</div>
+                            </div>
+                        </div>
+                    `;
+          } else {
+            let html = "";
+            this.broadcasters.forEach((data, id) => {
+              html += `
+                            <div class="device-item">
+                                <div>
+                                    <div class="device-name">${data.name}</div>
+                                    <div class="device-status">Active • ${data.duration}</div>
+                                </div>
+                                <div class="device-badge"></div>
+                            </div>
+                        `;
+            });
+            broadcasterList.innerHTML = html;
+          }
+
+          document.getElementById("streamCount").textContent =
+            this.broadcasters.size;
+        }
+      }
+
+      // Initialize
+      const app = new PartyOnUnified();
+
+      // Mode buttons
+      document.querySelectorAll(".mode-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".mode-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          app.setMode(btn.dataset.mode);
+        });
+      });
+
+      // Broadcast buttons
+      document
+        .getElementById("startBroadcastBtn")
+        .addEventListener("click", async () => {
+          try {
+            const btn = document.getElementById("startBroadcastBtn");
+            btn.disabled = true;
+            btn.textContent = "⏳ Requesting microphone...";
+
+            await app.startBroadcast();
+            showMessage("✅ Broadcasting started!", "success");
+          } catch (err) {
+            showMessage("❌ " + err.message, "error");
+            document.getElementById("startBroadcastBtn").disabled = false;
+            document.getElementById("startBroadcastBtn").textContent =
+              "🎤 Start Broadcasting";
+          }
+        });
+
+      document
+        .getElementById("stopBroadcastBtn")
+        .addEventListener("click", () => {
+          app.stopBroadcast();
+          showMessage("⏹️ Broadcasting stopped", "success");
+        });
+
+      // Message display
+      function showMessage(msg, type) {
+        const container = document.getElementById("messageContainer");
+        const div = document.createElement("div");
+        div.className = type === "error" ? "error-msg" : "success-msg";
+        div.textContent = msg;
+        container.innerHTML = "";
+        container.appendChild(div);
+      }
+
+      // Simulate broadcasters for demo
+      let demoInterval = setInterval(() => {
+        if (app.mode === "listen" && Math.random() > 0.7) {
+          const randomId = "device_" + Math.random().toString(36).substr(2, 9);
+          if (!app.broadcasters.has(randomId)) {
+            app.broadcasters.set(randomId, {
+              name: `Device ${app.broadcasters.size + 1}`,
+              duration: "00:00",
+            });
+            app.updateListenUI();
+          }
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>

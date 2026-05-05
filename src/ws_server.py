@@ -52,8 +52,10 @@ class AudioWebSocketServer:
         client_id = self.connection_manager.add_client(websocket)
         
         try:
-            # Keep connection open until client disconnects
-            await asyncio.Future()
+            # Keep connection open until client disconnects explicitly
+            await websocket.wait_closed()
+        except websockets.exceptions.ConnectionClosed:
+            self.logger.debug(f"Client {client_id} disconnected")
         except asyncio.CancelledError:
             pass
         except Exception as e:
@@ -64,12 +66,35 @@ class AudioWebSocketServer:
     async def broadcast_loop(self) -> None:
         """Main loop for capturing and broadcasting audio."""
         self.logger.info("Starting audio broadcast loop")
+        blocks_sent = 0
+        silence_count = 0
         
         while self.is_running:
             data = self.audio_capture.read_block()
             
             if data:
                 await self.connection_manager.broadcast(data)
+                blocks_sent += 1
+                silence_count = 0
+                
+                # Log stats on first block and then every 50 blocks
+                if blocks_sent == 1:
+                    self.logger.info(
+                        f"Audio streaming started: block size={len(data)} bytes, "
+                        f"clients={len(self.connection_manager.clients)}"
+                    )
+                elif blocks_sent % 50 == 0:
+                    self.logger.debug(
+                        f"Audio blocks sent: {blocks_sent}, "
+                        f"clients: {len(self.connection_manager.clients)}"
+                    )
+            else:
+                silence_count += 1
+                if silence_count > 100:  # Log after ~2 seconds of silence
+                    self.logger.warning(
+                        f"No audio data received (attempt {silence_count})"
+                    )
+                    silence_count = 0
             
             # Let event loop breathe
             await asyncio.sleep(0)

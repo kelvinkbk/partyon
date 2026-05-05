@@ -1,4 +1,4 @@
-sounddevice
+pyaudiowpatch
 Flask
 websockets
 numpy

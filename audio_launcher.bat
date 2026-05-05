@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title Sexy Audio Streamer
+title PartyOn Audio Streamer
 
 :: Colors for output
 set "GREEN=[92m"
@@ -11,7 +11,7 @@ set "RESET=[0m"
 
 echo.
 echo %CYAN%========================================%RESET%
-echo %CYAN%   Sexy Audio Streamer - Setup%RESET%
+echo %CYAN%   PartyOn Audio Streamer - Setup%RESET%
 echo %CYAN%========================================%RESET%
 echo.
 
@@ -19,9 +19,9 @@ echo.
 ver | find "Windows" >nul 2>&1
 if errorlevel 1 (
     echo %RED%[ERROR] This script requires Windows.%RESET%
-    echo Please use sexy_audio.sh for Linux/macOS:
-    echo   chmod +x sexy_audio.sh
-    echo   ./sexy_audio.sh
+    echo Please use audio_launcher.sh for Linux/macOS:
+    echo   chmod +x audio_launcher.sh
+    echo   ./audio_launcher.sh
     pause
     exit /b 1
 )

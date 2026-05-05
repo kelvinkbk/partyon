@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Sexy Audio Streamer - Cross-platform launcher for Linux/macOS
+# PartyOn Audio Streamer - Cross-platform launcher for Linux/macOS
 
 # Colors
 GREEN='\033[0;32m'
@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 
 echo ""
 echo -e "${CYAN}========================================${NC}"
-echo -e "${CYAN}   Sexy Audio Streamer - Setup${NC}"
+echo -e "${CYAN}   PartyOn Audio Streamer - Setup${NC}"
 echo -e "${CYAN}========================================${NC}"
 echo ""
 
@@ -30,7 +30,7 @@ echo -e "${GREEN}[OK]${NC} Detected OS: $OS"
 
 # Check if Windows-based (should use .bat instead)
 if [[ "$OS" == "Cygwin" || "$OS" == "MinGW" || "$OS" == "MSYS" ]]; then
-    echo -e "${YELLOW}[WARN]${NC} Windows detected. Consider using 'sexy audio.bat' instead."
+    echo -e "${YELLOW}[WARN]${NC} Windows detected. Consider using 'audio_launcher.bat' instead."
     echo -e "${YELLOW}[INFO]${NC} Continuing with shell script..."
 fi
 
