@@ -444,6 +444,20 @@
           <button class="mode-btn" data-mode="broadcast">🎤 Broadcast</button>
         </div>
 
+        <!-- CONNECTION INFO -->
+        <div class="status-card" id="connectionInfo" style="background: rgba(0, 150, 150, 0.1); border-left: 3px solid #00e676;">
+          <div class="status-label">Connection Info</div>
+          <div class="status-value" id="connectionType" style="font-size: 14px; margin-top: 8px;">
+            Protocol: <span id="protocolType">HTTP</span> | 
+            Host: <span id="hostName">localhost</span>
+          </div>
+          <div class="status-label" style="margin-top: 8px;">
+            <span id="securityWarning" style="color: #ff5252; display: none;">
+              ⚠️ For microphone on non-localhost, use HTTPS or try localhost instead
+            </span>
+          </div>
+        </div>
+
         <!-- LISTEN MODE -->
         <div id="listenSection" class="section active">
           <div class="status-card">
@@ -658,6 +672,14 @@
 
         async startBroadcast() {
           try {
+            // Check if getUserMedia is available
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+              throw new Error(
+                "Microphone not supported. " +
+                "Please use HTTPS or localhost, and allow microphone permissions."
+              );
+            }
+
             this.mediaStream = await navigator.mediaDevices.getUserMedia({
               audio: {
                 echoCancellation: false,
@@ -695,7 +717,14 @@
 
             return true;
           } catch (err) {
-            throw new Error("Microphone access denied: " + err.message);
+            const msg = err.message || String(err);
+            if (msg.includes('Permission denied')) {
+              throw new Error('Microphone permission denied. Please allow access.');
+            }
+            if (msg.includes('getUserMedia')) {
+              throw new Error('HTTPS required for microphone access (or use localhost)');
+            }
+            throw err;
           }
         }
 
@@ -809,6 +838,18 @@
 
       // Initialize
       const app = new PartyOnUnified();
+
+      // Show connection info
+      document.getElementById('protocolType').textContent = window.location.protocol.replace(':', '');
+      document.getElementById('hostName').textContent = window.location.hostname;
+      
+      // Warn if not localhost and not HTTPS
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isSecure = window.location.protocol === 'https:';
+      
+      if (!isLocalhost && !isSecure) {
+        document.getElementById('securityWarning').style.display = 'block';
+      }
 
       // Mode buttons
       document.querySelectorAll(".mode-btn").forEach((btn) => {
